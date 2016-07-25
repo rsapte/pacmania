@@ -1,0 +1,6 @@
+{
+  "globalDependencies": {
+    "node": "registry:dt/node#6.0.0+20160720070758",
+    "socket.io": "registry:dt/socket.io#1.4.4+20160317120654"
+  }
+}
