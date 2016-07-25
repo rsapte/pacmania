@@ -56,41 +56,44 @@ class GameServer {
 
     private _onInitPlayer(socket: SocketIO.Socket, payload: IInitPlayerEvent) {
         if(!this._game) {
-            let player = new Player(socket.id, payload.player.location, PlayerType.Pacman);
-            this._game = new Game(player, payload.fruits);
+            let pacman = new Player(socket.id, payload.player.location, PlayerType.Pacman);
+            this._game = new Game(pacman, payload.fruits);
         }
         else {
-            let player = new Player(socket.id, payload.player.location, PlayerType.Ghost);
-            this._game.addPlayer(player);
+            let ghost = new Player(socket.id, payload.player.location, PlayerType.Ghost);
+            this._game.addGhost(ghost);
         }        
+
+        this._broadcastGameState();
     }
     
     private _onClientDisconnect(socket: SocketIO.Socket) {
         if(this._game) {
             this._game.removePlayer(socket.id);
         }
-        
+
+        this._broadcastGameState();
         console.log('Client disconnected.');
     }
 
     private _onUpdateLocation(socket: SocketIO.Socket, event: ILocationUpdatedEvent) {
-        //TODO
-        /*
-        socket.broadcast.emit('update-location', {
-            id: socket.id,
-            x: event.location.x,
-            y: event.location.y
-        });
-        */
         this._game.updateLocation(socket.id, event.location);
+        this._broadcastGameState();
+    }
+
+    private _broadcastGameState() {
         let players: Player[] = [];
-        for(let id in this._game.players) {
-            if(this._game.players.hasOwnProperty(id)) {
-                players.push(this._game.players[id]);
+        if(this._game.pacman) {
+            players.push(this._game.pacman);
+        }
+
+        for(let id in this._game.ghosts) {
+            if(this._game.ghosts.hasOwnProperty(id)) {
+                players.push(this._game.ghosts[id]);
             }
         }
 
-        let updateEvent: IUpdateGameStateEvent = {
+         let updateEvent: IUpdateGameStateEvent = {
             players: players,
             fruits: this._game.fruits,
             state: this._game.state
