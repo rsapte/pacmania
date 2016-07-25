@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+    <head>
+        <script src='/socket.io/socket.io.js'></script>
+        <script>
+            function getClientLocation(callback) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    callback(position);
+                });
+            }
+
+            var socket = io.connect();
+
+            socket.on('update-game-state', function(payload) {
+                let message = `New world state: ${JSON.stringify(payload)}`;
+                document.getElementById('server-message').innerHTML += '<br/><br/>' + message;
+            });
+            
+            getClientLocation(function(location) {
+                let locationData = { 
+                    location: {
+                            x: location.coords.latitude,
+                            y: location.coords.longitude
+                        }
+                };
+
+                let initPlayer = {
+                    player: {
+                        location: locationData.location
+                    },
+                    fruits: [
+                        {  value: 50, name: 'apple', location: {x: 100, y: 100}},
+                        {  value: 150, name: 'banana', location: {x: 200, y: 200}},
+                        {  value: 250, name: 'orange', location: {x: 300, y: 300}},
+                    ]
+                };
+
+                socket.emit('init-player', initPlayer);
+                setInterval(function() {
+                    socket.emit('update-location', locationData);
+                }, 2000);
+            });
+        </script>
+    </head>
+    <body>
+        <div id='server-message'/>
+    </body>
+</html>
