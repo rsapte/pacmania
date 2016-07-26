@@ -15,6 +15,9 @@ import com.github.nkzawa.socketio.client.Socket;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 
 import org.json.JSONException;
@@ -22,6 +25,7 @@ import org.json.JSONObject;
 
 import java.net.URISyntaxException;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicMarkableReference;
 
 
 public class MapsActivity extends FragmentActivity implements LocationListener, OnMapReadyCallback {
@@ -53,17 +57,40 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
         onUpdateGameState = new Emitter.Listener() {
             @Override
             public void call(final Object... args) {
+                if(mMap == null) {
+                    return;
+                }
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         JSONObject data = (JSONObject)args[0];
-                        String foo;
-                        //TODO: get world state and update map
-                        try {
-                            foo = data.getString("foo").toString();
+                        String str = data.toString();
+                        UpdateGameStateEvent event = jsonSerializer.fromJson(str, UpdateGameStateEvent.class);
+                        mMap.clear();
+                        // place markers for sprites
+
+                        if(event.Pacman != null) {
+                            LatLng pos = new LatLng(event.Pacman.Location.Y, event.Pacman.Location.X);
+                            mMap.addMarker(new MarkerOptions()
+                                    .title("Pacman")
+                                    .position(pos));
                         }
-                        catch (JSONException e) {
-                            return;
+
+                        for (Player ghost :
+                                event.Ghosts) {
+                            LatLng pos = new LatLng(ghost.Location.Y, ghost.Location.X);
+                            mMap.addMarker(new MarkerOptions()
+                                    .title("Ghost")
+                                    .position(pos));
+                        }
+
+                        for (Fruit fruit :
+                                event.Fruits) {
+                            LatLng pos = new LatLng(fruit.Location.Y, fruit.Location.X);
+                            mMap.addMarker(new MarkerOptions()
+                                    .title("Fruit")
+                                    .position(pos));
                         }
                     }
                 });
@@ -103,6 +130,7 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
             if(mMap != null) {
                 InitPlayerEvent event = createInitPlayerEvent(location);
                 mSocket.emit(Events.INIT_PLAYER, toJson(event));
+                mInitialized = true;
             }
         }
         else {
