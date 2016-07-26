@@ -34,8 +34,8 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
     private Socket mSocket;
     private boolean mInitialized = false;
 
-    private static final long MIN_TIME = 400;
-    private static final float MIN_DISTANCE = 1000;
+    private static final long MIN_TIME = 0;
+    private static final float MIN_DISTANCE = 0;
     private static final double BOUNDING_BOX_DIM = 1 / 68;
     private static Random random = new Random();
     private static Gson jsonSerializer = new Gson();
