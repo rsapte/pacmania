@@ -47,11 +47,6 @@ class GameServer {
     private _onSocketConnected(socket: SocketIO.Socket) {
         console.log(`Client connected, socket id ${socket.id}`);
 
-        if(this._game && this._game.state !== GameState.Active) {
-            socket.disconnect(true);
-            return;
-        }
-
         socket.on(Events.INIT_PLAYER, (payload: string) => this._onInitPlayer(socket, payload));
         socket.on(Events.UPDATE_LOCATION, (payload: string) => this._onUpdateLocation(socket, payload));
 
@@ -59,8 +54,10 @@ class GameServer {
     }
 
     private _onInitPlayer(socket: SocketIO.Socket, event: string) {
+        console.log(`Received player init event ${event}`)
         let payload: IInitPlayerEvent = JSON.parse(event);
-        if(!this._game) {
+        if(!this._game || this._game.state !== GameState.Active) {
+            console.log('Starting a new game.');
             let pacman = new Player(socket.id, payload.player.location, PlayerType.Pacman);
             this._game = new Game(pacman, payload.fruits);
         }
@@ -73,15 +70,16 @@ class GameServer {
     }
     
     private _onClientDisconnect(socket: SocketIO.Socket) {
+        console.log('Client disconnected.');
         if(this._game) {
             this._game.removePlayer(socket.id);
         }
 
         this._broadcastGameState();
-        console.log('Client disconnected.');
     }
 
     private _onUpdateLocation(socket: SocketIO.Socket, event: string) {
+        console.log(`Received location update event ${event}`);
         let payload: ILocationUpdatedEvent = JSON.parse(event);
         this._game.updateLocation(socket.id, payload.location);
         this._broadcastGameState();
@@ -102,6 +100,7 @@ class GameServer {
              state: this._game.state
         };
         
+        console.log(`Pushing state update to sockets ${JSON.stringify(updateEvent)}`)
         this._io.sockets.emit(Events.UPDATE_GAME_STATE, updateEvent);
     }
 }
