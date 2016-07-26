@@ -10,12 +10,13 @@ class Game {
         this._started = false;
     }
     updateLocation(playerId, newLocation) {
-        if (playerId === this.pacman.id) {
+        if (this.pacman && playerId === this.pacman.id) {
             this.pacman.location = newLocation;
         }
         else {
             if (!this.ghosts[playerId]) {
-                throw Error(`No player found with id ${playerId}.`);
+                console.log(`No player found with id ${playerId}.`);
+                return;
             }
             this.ghosts[playerId].location = newLocation;
         }
@@ -23,34 +24,42 @@ class Game {
     }
     addGhost(player) {
         if (this.ghosts[player.id]) {
-            throw Error(`Player ${player.id} is already in the game!`);
+            console.log(`Player ${player.id} is already in the game!`);
+            return;
         }
         this.ghosts[player.id] = player;
         this._started = true;
         this._eval();
     }
     removePlayer(playerId) {
-        if (playerId === this.pacman.id) {
+        if (this.pacman && playerId === this.pacman.id) {
             this.pacman = null;
         }
         else {
             if (!this.ghosts[playerId]) {
-                throw Error(`Player ${playerId} does not exist!`);
+                console.log(`Player ${playerId} does not exist!`);
+                return;
             }
             delete this.ghosts[playerId];
         }
         this._eval();
     }
     _eval() {
-        if (!this.pacman) {
+        if (!this._started) {
+            return;
+        }
+        if (!this.pacman && Object.keys(this.ghosts).length > 0) {
             this.state = interfaces_1.GameState.GhostsWin;
+            console.log('No pacman, ghosts win');
             return;
         }
         if (this.fruits.length === 0) {
+            console.log('No more fruits, pacman wins');
             this.state = interfaces_1.GameState.PacmanWins;
             return;
         }
-        if (Object.keys(this.ghosts).length === 0 && this._started) {
+        if (Object.keys(this.ghosts).length === 0) {
+            console.log('All ghosts left. Pacman wins.');
             this.state = interfaces_1.GameState.PacmanWins;
             return;
         }
@@ -58,6 +67,8 @@ class Game {
             let ghost = this.ghosts[id];
             let distance = this._computeDistance(this.pacman.location, ghost.location);
             if (distance === 0) {
+                console.log(`Ghost ${ghost.id} eats pacman ${this.pacman.id}, ghosts win`);
+                this.pacman = null;
                 this.state = interfaces_1.GameState.GhostsWin;
                 return;
             }
@@ -67,6 +78,7 @@ class Game {
             if (distance === 0) {
                 delete this.fruits[this.fruits.indexOf(fruit)];
                 if (this.fruits.length === 0) {
+                    console.log('No more fruits, pacman wins');
                     this.state = interfaces_1.GameState.PacmanWins;
                     return;
                 }

@@ -4,7 +4,7 @@ import Fs = require('fs');
 import Express = require('express');
 import ExpressStatic = require('express-serve-static-core');
 import SocketIO = require('socket.io');
-import { ILocationUpdatedEvent, IInitPlayerEvent, Events, IUpdateGameStateEvent, Player, PlayerType } from "./models/interfaces";
+import { ILocationUpdatedEvent, IInitPlayerEvent, Events, IUpdateGameStateEvent, Player, PlayerType, GameState } from "./models/interfaces";
 import { Game } from './models/game';
 
 interface IGameServerConfig {
@@ -35,7 +35,6 @@ class GameServer {
 
     public start() {
         let port = this._config? this._config.port: 8000;
-
         this._httpServer.listen(port, function() {
             console.log(`HTTP server is listening on port ${port}`);
         });
@@ -47,6 +46,11 @@ class GameServer {
 
     private _onSocketConnected(socket: SocketIO.Socket) {
         console.log(`Client connected, socket id ${socket.id}`);
+
+        if(this._game && this._game.state !== GameState.Active) {
+            socket.disconnect(true);
+            return;
+        }
 
         socket.on(Events.INIT_PLAYER, (payload: IInitPlayerEvent) => this._onInitPlayer(socket, payload));
         socket.on(Events.UPDATE_LOCATION, (payload: ILocationUpdatedEvent) => this._onUpdateLocation(socket, payload));
@@ -83,10 +87,6 @@ class GameServer {
 
     private _broadcastGameState() {
         let players: Player[] = [];
-        if(this._game.pacman) {
-            players.push(this._game.pacman);
-        }
-
         for(let id in this._game.ghosts) {
             if(this._game.ghosts.hasOwnProperty(id)) {
                 players.push(this._game.ghosts[id]);
@@ -94,9 +94,10 @@ class GameServer {
         }
 
          let updateEvent: IUpdateGameStateEvent = {
-            players: players,
-            fruits: this._game.fruits,
-            state: this._game.state
+             pacman: this._game.pacman,
+             ghosts: players,
+             fruits: this._game.fruits,
+             state: this._game.state
         };
         
         this._io.sockets.emit(Events.UPDATE_GAME_STATE, updateEvent);

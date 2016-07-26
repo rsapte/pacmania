@@ -29,6 +29,10 @@ class GameServer {
     }
     _onSocketConnected(socket) {
         console.log(`Client connected, socket id ${socket.id}`);
+        if (this._game && this._game.state !== interfaces_1.GameState.Active) {
+            socket.disconnect(true);
+            return;
+        }
         socket.on(interfaces_1.Events.INIT_PLAYER, (payload) => this._onInitPlayer(socket, payload));
         socket.on(interfaces_1.Events.UPDATE_LOCATION, (payload) => this._onUpdateLocation(socket, payload));
         socket.on('disconnect', () => this._onClientDisconnect(socket));
@@ -57,16 +61,14 @@ class GameServer {
     }
     _broadcastGameState() {
         let players = [];
-        if (this._game.pacman) {
-            players.push(this._game.pacman);
-        }
         for (let id in this._game.ghosts) {
             if (this._game.ghosts.hasOwnProperty(id)) {
                 players.push(this._game.ghosts[id]);
             }
         }
         let updateEvent = {
-            players: players,
+            pacman: this._game.pacman,
+            ghosts: players,
             fruits: this._game.fruits,
             state: this._game.state
         };

@@ -19,7 +19,8 @@ export enum GameState {
 }
 
 export interface IUpdateGameStateEvent {
-    players: Player[];
+    pacman: Player;
+    ghosts: Player[];
     fruits: Fruit[];
     state: GameState;
 }

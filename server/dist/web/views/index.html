@@ -10,12 +10,6 @@
             }
 
             var socket = io.connect();
-
-            socket.on('update-game-state', function(payload) {
-                let message = `New world state: ${JSON.stringify(payload)}`;
-                document.getElementById('server-message').innerHTML += '<br/><br/>' + message;
-            });
-            
             getClientLocation(function(location) {
                 let locationData = { 
                     location: {
@@ -36,9 +30,14 @@
                 };
 
                 socket.emit('init-player', initPlayer);
-                setInterval(function() {
+                let interval = setInterval(function() {
                     socket.emit('update-location', locationData);
                 }, 2000);
+
+                socket.on('update-game-state', function(payload) {
+                    let message = `New world state: ${JSON.stringify(payload)}`;
+                    document.getElementById('server-message').innerHTML += '<br/><br/>' + message;
+                });
             });
         </script>
     </head>
