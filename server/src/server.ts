@@ -53,7 +53,7 @@ class GameServer {
         }
 
         socket.on(Events.INIT_PLAYER, (payload: string) => this._onInitPlayer(socket, payload));
-        socket.on(Events.UPDATE_LOCATION, (payload: ILocationUpdatedEvent) => this._onUpdateLocation(socket, payload));
+        socket.on(Events.UPDATE_LOCATION, (payload: string) => this._onUpdateLocation(socket, payload));
 
         socket.on('disconnect', () => this._onClientDisconnect(socket));
     }
@@ -81,8 +81,9 @@ class GameServer {
         console.log('Client disconnected.');
     }
 
-    private _onUpdateLocation(socket: SocketIO.Socket, event: ILocationUpdatedEvent) {
-        this._game.updateLocation(socket.id, event.location);
+    private _onUpdateLocation(socket: SocketIO.Socket, event: string) {
+        let payload: ILocationUpdatedEvent = JSON.parse(event);
+        this._game.updateLocation(socket.id, payload.location);
         this._broadcastGameState();
     }
 

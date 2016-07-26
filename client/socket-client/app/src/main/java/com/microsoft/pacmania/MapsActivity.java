@@ -103,13 +103,16 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        int accessFineLocationPermission = -1, accessCoarseLocationPermission = -1;
 
         // ask for location updates
         if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             int permissionCheck = ContextCompat.checkSelfPermission(this,
                     android.Manifest.permission.ACCESS_FINE_LOCATION);
-            if(permissionCheck != PackageManager.PERMISSION_GRANTED) {
-                return;
+            if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        accessFineLocationPermission);
+                //return;
             }
         }
 
@@ -117,7 +120,9 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
             int permissionCheck = ContextCompat.checkSelfPermission(this,
                     Manifest.permission.ACCESS_COARSE_LOCATION);
             if(permissionCheck != PackageManager.PERMISSION_GRANTED) {
-                return;
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                        accessCoarseLocationPermission);
+                //return;
             }
         }
 

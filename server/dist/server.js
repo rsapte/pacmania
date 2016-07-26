@@ -57,7 +57,8 @@ class GameServer {
         console.log('Client disconnected.');
     }
     _onUpdateLocation(socket, event) {
-        this._game.updateLocation(socket.id, event.location);
+        let payload = JSON.parse(event);
+        this._game.updateLocation(socket.id, payload.location);
         this._broadcastGameState();
     }
     _broadcastGameState() {
