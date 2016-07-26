@@ -1,6 +1,6 @@
 package com.microsoft.pacmania;
 
 public class InitPlayerEvent {
-    public Player Player;
-    public Fruit[] Fruits;
+    public Player player;
+    public Fruit[] fruits;
 }

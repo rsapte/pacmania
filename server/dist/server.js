@@ -37,7 +37,8 @@ class GameServer {
         socket.on(interfaces_1.Events.UPDATE_LOCATION, (payload) => this._onUpdateLocation(socket, payload));
         socket.on('disconnect', () => this._onClientDisconnect(socket));
     }
-    _onInitPlayer(socket, payload) {
+    _onInitPlayer(socket, event) {
+        let payload = JSON.parse(event);
         if (!this._game) {
             let pacman = new interfaces_1.Player(socket.id, payload.player.location, interfaces_1.PlayerType.Pacman);
             this._game = new game_1.Game(pacman, payload.fruits);

@@ -52,13 +52,14 @@ class GameServer {
             return;
         }
 
-        socket.on(Events.INIT_PLAYER, (payload: IInitPlayerEvent) => this._onInitPlayer(socket, payload));
+        socket.on(Events.INIT_PLAYER, (payload: string) => this._onInitPlayer(socket, payload));
         socket.on(Events.UPDATE_LOCATION, (payload: ILocationUpdatedEvent) => this._onUpdateLocation(socket, payload));
 
         socket.on('disconnect', () => this._onClientDisconnect(socket));
     }
 
-    private _onInitPlayer(socket: SocketIO.Socket, payload: IInitPlayerEvent) {
+    private _onInitPlayer(socket: SocketIO.Socket, event: string) {
+        let payload: IInitPlayerEvent = JSON.parse(event);
         if(!this._game) {
             let pacman = new Player(socket.id, payload.player.location, PlayerType.Pacman);
             this._game = new Game(pacman, payload.fruits);

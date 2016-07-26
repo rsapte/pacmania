@@ -1,11 +1,11 @@
 package com.microsoft.pacmania;
 
 public class LocationData {
-    public double X;
-    public double Y;
+    public double x;
+    public double y;
 
     public LocationData(double x, double y) {
-        this.X = x;
-        this.Y = y;
+        this.x = x;
+        this.y = y;
     }
 }

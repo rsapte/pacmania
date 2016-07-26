@@ -1,6 +1,5 @@
 package com.microsoft.pacmania;
 
-import android.*;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -18,17 +17,14 @@ import com.github.nkzawa.socketio.client.Socket;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URISyntaxException;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicMarkableReference;
 
 
 public class MapsActivity extends FragmentActivity implements LocationListener, OnMapReadyCallback {
@@ -66,24 +62,24 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                         mMap.clear();
                         // place markers for sprites
 
-                        if(event.Pacman != null) {
-                            LatLng pos = new LatLng(event.Pacman.Location.Y, event.Pacman.Location.X);
+                        if(event.pacman != null) {
+                            LatLng pos = new LatLng(event.pacman.location.y, event.pacman.location.x);
                             mMap.addMarker(new MarkerOptions()
                                     .title("Pacman")
                                     .position(pos));
                         }
 
                         for (Player ghost :
-                                event.Ghosts) {
-                            LatLng pos = new LatLng(ghost.Location.Y, ghost.Location.X);
+                                event.ghosts) {
+                            LatLng pos = new LatLng(ghost.location.y, ghost.location.x);
                             mMap.addMarker(new MarkerOptions()
                                     .title("Ghost")
                                     .position(pos));
                         }
 
                         for (Fruit fruit :
-                                event.Fruits) {
-                            LatLng pos = new LatLng(fruit.Location.Y, fruit.Location.X);
+                                event.fruits) {
+                            LatLng pos = new LatLng(fruit.location.y, fruit.location.x);
                             mMap.addMarker(new MarkerOptions()
                                     .title("Fruit")
                                     .position(pos));
@@ -150,7 +146,8 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
         if(!mInitialized) {
             if(mMap != null) {
                 InitPlayerEvent event = createInitPlayerEvent(location);
-                mSocket.emit(Events.INIT_PLAYER, toJson(event));
+                String e = toJson(event);
+                mSocket.emit(Events.INIT_PLAYER, e);
                 mInitialized = true;
             }
         }
@@ -166,14 +163,14 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
 
     private UpdateLocationEvent createUpdateLocationEvent(Location location) {
         UpdateLocationEvent event = new UpdateLocationEvent();
-        event.Location = new LocationData(location.getLongitude(), location.getLatitude());
+        event.location = new LocationData(location.getLongitude(), location.getLatitude());
         return event;
     }
 
     private InitPlayerEvent createInitPlayerEvent(Location location) {
         InitPlayerEvent event = new InitPlayerEvent();
-        event.Player = new Player();
-        event.Player.Location = new LocationData(location.getLongitude(), location.getLatitude());
+        event.player = new Player();
+        event.player.location = new LocationData(location.getLongitude(), location.getLatitude());
 
         double boxWidth = BOUNDING_BOX_DIM / 2;
         double north = Math.min(90, location.getLatitude() + boxWidth);
@@ -181,7 +178,7 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
         double east = Math.min(180, location.getLongitude() + boxWidth);
         double west = Math.max(-180, location.getLongitude() - boxWidth);
 
-        event.Fruits = new Fruit[] {
+        event.fruits = new Fruit[] {
                 new Fruit(random.nextInt(100), "Apple", generateLocation(north, south, east, west)),
                 new Fruit(random.nextInt(100), "Banana", generateLocation(north, south, east, west)),
                 new Fruit(random.nextInt(100), "Orange", generateLocation(north, south, east, west)),
