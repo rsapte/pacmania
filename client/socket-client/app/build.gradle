@@ -28,3 +28,5 @@ dependencies {
     compile 'com.github.nkzawa:socket.io-client:0.3.0'
     compile 'com.google.code.gson:gson:2.+'
 }
+apply plugin: 'com.google.gms.google-services'
+

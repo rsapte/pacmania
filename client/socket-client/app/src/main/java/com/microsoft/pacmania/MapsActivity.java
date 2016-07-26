@@ -1,5 +1,7 @@
 package com.microsoft.pacmania;
 
+import android.*;
+import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -8,6 +10,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.ContextCompat;
 
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
@@ -33,13 +36,6 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
     private GoogleMap mMap;
     private LocationManager mLocationManager;
     private Socket mSocket;
-
-    {
-        try {
-            mSocket = IO.socket(getString(R.string.socket_server));
-        } catch (URISyntaxException e) {
-        }
-    }
 
     private boolean mInitialized = false;
     private Emitter.Listener onUpdateGameState;
@@ -98,13 +94,35 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
             }
         };
 
-        // setup socket
-        mSocket.on(Events.UPDATE_GAME_STATE, onUpdateGameState);
-        mSocket.connect();
+        initializeSocket();
+
+
+        setContentView(R.layout.activity_maps);
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
 
         // ask for location updates
+        if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            int permissionCheck = ContextCompat.checkSelfPermission(this,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION);
+            if(permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+        }
+
+        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            int permissionCheck = ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION);
+            if(permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+        }
+
         mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        /*if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -113,17 +131,20 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
             return;
-        }
+        }*/
         mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME, MIN_DISTANCE, this);
-
-        // ask for map
-        setContentView(R.layout.activity_maps);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
     }
 
+
+    private void initializeSocket() {
+        try {
+            mSocket = IO.socket(getString(R.string.socket_server));
+            // setup socket
+            mSocket.on(Events.UPDATE_GAME_STATE, onUpdateGameState);
+            mSocket.connect();
+        } catch (URISyntaxException e) {
+        }
+    }
     @Override
     public void onLocationChanged(Location location) {
         if(!mInitialized) {
@@ -204,5 +225,6 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
     protected void onDestroy() {
         super.onDestroy();
         mSocket.disconnect();
+        mSocket.off(Events.UPDATE_GAME_STATE, onUpdateGameState);
     }
 }
