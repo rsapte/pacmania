@@ -70,13 +70,13 @@ export class Game {
             return;
         }
 
-        if(this.fruits.length === 0) {
+        if(this.pacman && this.fruits.length === 0) {
             console.log('No more fruits, pacman wins');
             this.state = GameState.PacmanWins;
             return;
         }
 
-        if(Object.keys(this.ghosts).length === 0) {
+        if(this.pacman && Object.keys(this.ghosts).length === 0) {
             console.log('All ghosts left. Pacman wins.')
             this.state = GameState.PacmanWins;
             return;
