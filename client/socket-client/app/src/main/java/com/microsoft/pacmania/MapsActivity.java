@@ -3,11 +3,11 @@ package com.microsoft.pacmania;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Camera;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
@@ -16,7 +16,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.nkzawa.emitter.Emitter;
-import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -28,11 +27,9 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
-import com.google.gson.internal.bind.MapTypeAdapterFactory;
 
 import org.json.JSONObject;
 
-import java.net.URISyntaxException;
 import java.util.Random;
 
 
@@ -43,12 +40,14 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
     private Socket mSocket;
     private boolean mInitialized = false;
 
+    private static MediaPlayer player;
     private static final long MIN_TIME = 0;
     private static final float MIN_DISTANCE = 0;
     private static final double BOUNDING_BOX_DIM = (double) 1 / 500;
     private static Random random = new Random();
     private static Gson jsonSerializer = new Gson();
     private boolean mGameActive = true;
+    BackgroundSound mBackgroundSound = new BackgroundSound();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,7 +119,7 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                                     .position(pos)
                                     .icon(BitmapDescriptorFactory.fromResource(R.mipmap.pacman_icon))
                             );
-                            scoreString += "Pacman:" + event.pacman.score;
+                            scoreString = String.format("Score: PacMan - %d", (int) event.pacman.score);
                         }
 
                         int ghostIndex = 0;
@@ -132,7 +131,6 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                                     .position(pos)
                                     .icon(BitmapDescriptorFactory.fromResource(ghostIcons[(ghostIndex++) % ghostIcons.length]))
                             );
-                            scoreString += ghost.name + ":" + ghost.score;
                         }
 
                         int fruitIndex = 0;
@@ -140,7 +138,7 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                                 event.fruits) {
                             LatLng pos = new LatLng(fruit.location.y, fruit.location.x);
                             mMap.addMarker(new MarkerOptions()
-                                    .title("Fruit (" + fruit.value + ")")
+                                    .title(fruit.name + " (" + fruit.value + ")")
                                     .position(pos)
                                     .icon(BitmapDescriptorFactory.fromResource(fruitIcons[(fruitIndex++) % fruitIcons.length]))
                             );
@@ -267,6 +265,18 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        mBackgroundSound.execute((Void[]) null);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mBackgroundSound.cancel(true);
+    }
+
+    @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
     }
 
@@ -286,5 +296,18 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
+
+    public class BackgroundSound extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            player = MediaPlayer.create(MapsActivity.this, R.raw.pacman_music);
+            player.setLooping(true); // Set looping
+            player.setVolume(1.0f, 1.0f);
+            player.start();
+
+            return null;
+        }
     }
 }
