@@ -10,6 +10,8 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
@@ -60,7 +62,16 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                         UpdateGameStateEvent event = jsonSerializer.fromJson(str, UpdateGameStateEvent.class);
                         mMap.clear();
                         // place markers for sprites
+                        if(event.state == GameState.GhostsWin) {
+                            Toast.makeText(getApplicationContext(), "Game over, ghosts win!", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        else if(event.state == GameState.PacmanWins) {
+                            Toast.makeText(getApplicationContext(), "Game over, pacman wins!", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
 
+                        String scoreString = "";
                         if (event.pacman != null) {
                             LatLng pos = new LatLng(event.pacman.location.y, event.pacman.location.x);
                             mMap.addMarker(new MarkerOptions()
@@ -68,6 +79,7 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                                     .position(pos)
                                     .icon(BitmapDescriptorFactory.fromResource(R.mipmap.pacman_icon))
                             );
+                            scoreString += "Pacman:" + event.pacman.score;
                         }
 
                         for (Player ghost :
@@ -78,6 +90,7 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                                     .position(pos)
                                     .icon(BitmapDescriptorFactory.fromResource(R.drawable.ghost_icon))
                             );
+                            scoreString += "Ghost" + ghost.id + ":" + ghost.score;
                         }
 
                         for (Fruit fruit :
@@ -88,6 +101,13 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                                     .position(pos)
                                     .icon(BitmapDescriptorFactory.fromResource(R.mipmap.apple_icon))
                             );
+                        }
+
+                        TextView scoreText = (TextView)findViewById(R.id.scores);
+                        scoreText.setText(scoreString);
+
+                        if(!event.change.isEmpty()){
+                            Toast.makeText(getApplicationContext(), event.change, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });

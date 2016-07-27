@@ -8,4 +8,5 @@ public class UpdateGameStateEvent {
     public Player[] ghosts;
     public Fruit[] fruits;
     public GameState state;
+    public String change;
 }

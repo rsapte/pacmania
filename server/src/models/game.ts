@@ -6,6 +6,7 @@ export class Game {
     ghosts: { [id: string]: Player}
     fruits: Fruit[];
     state: GameState;
+    changes: string[];
     _started: boolean;
 
     constructor(pacman: Player, fruits: Fruit[]) {
@@ -14,6 +15,7 @@ export class Game {
         this.fruits = fruits;
         this.state = GameState.Active;
         this._started = false;
+        this.changes = [];
     }
 
     public updateLocation(playerId: string, newLocation: ILocationData) {
@@ -60,6 +62,7 @@ export class Game {
     }
 
     private _eval() {
+        this.changes = [];
         if(!this._started) {
             if(!this.pacman) {
                 this.state = GameState.GhostsWin;
@@ -89,8 +92,11 @@ export class Game {
             let ghost = this.ghosts[id];
             let distance = this._computeDistance(this.pacman.location, ghost.location);
 
-            if(distance === 10) {
-                console.log(`Ghost ${ghost.id} eats pacman ${this.pacman.id}, ghosts win`);
+            if(distance < 10) {
+                let msg = `Ghost ${ghost.id} eats pacman ${this.pacman.id}, ghosts win`;
+                console.log(msg);
+                ghost.score += 1000;
+                this.changes.push(msg);
                 this.pacman = null;
                 this.state = GameState.GhostsWin;
                 return;
@@ -100,9 +106,15 @@ export class Game {
         for (let i = 0; i < this.fruits.length; i++) {
             let fruit = this.fruits[i];
             let distance = this._computeDistance(fruit.location, this.pacman.location);
-            if(distance === 0) {
+            if(distance < 5) {
+                this.pacman.score += fruit.value;
+                this.changes.push(`Pacman ate fruit '${fruit.name} for ${fruit.value} points.`);
                 this.fruits.splice(i, 1);
                 i--;
+                if(this.fruits.length === 0) {
+                    this.state = GameState.PacmanWins;
+                    return;
+                }
             }
         }
     }

@@ -23,6 +23,7 @@ export interface IUpdateGameStateEvent {
     ghosts: Player[];
     fruits: Fruit[];
     state: GameState;
+    change: string;
 }
 
 export class Events {
