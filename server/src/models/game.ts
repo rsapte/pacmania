@@ -100,7 +100,7 @@ export class Game {
         for (let i = 0; i < this.fruits.length; i++) {
             let fruit = this.fruits[i];
             let distance = this._computeDistance(fruit.location, this.pacman.location);
-            if(distance === 10) {
+            if(distance === 0) {
                 this.fruits.splice(i, 1);
                 i--;
             }
