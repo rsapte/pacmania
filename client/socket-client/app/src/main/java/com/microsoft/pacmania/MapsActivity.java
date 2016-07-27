@@ -82,7 +82,7 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                                     .position(pos)
                                     .icon(BitmapDescriptorFactory.fromResource(R.mipmap.pacman_icon))
                             );
-                            scoreString += "Pacman:" + event.pacman.score;
+                            scoreString = String.format("Score: PacMan - %d", (int) event.pacman.score);
                         }
 
                         for (Player ghost :
@@ -93,7 +93,6 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                                     .position(pos)
                                     .icon(BitmapDescriptorFactory.fromResource(R.drawable.ghost_icon))
                             );
-                            scoreString += "Ghost" + ghost.id + ":" + ghost.score;
                         }
 
                         for (Fruit fruit :
