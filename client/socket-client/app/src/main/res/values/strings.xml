@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">PacMania</string>
-    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_maps">PacMania</string>
     <string name="socket_server">http://13.91.93.28:3000/</string>
 </resources>
