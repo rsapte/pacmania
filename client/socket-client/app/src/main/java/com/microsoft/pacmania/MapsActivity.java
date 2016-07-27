@@ -3,6 +3,7 @@ package com.microsoft.pacmania;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Camera;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -23,9 +24,11 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
+import com.google.gson.internal.bind.MapTypeAdapterFactory;
 
 import org.json.JSONObject;
 
@@ -42,13 +45,34 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
 
     private static final long MIN_TIME = 0;
     private static final float MIN_DISTANCE = 0;
-    private static final double BOUNDING_BOX_DIM = (double)1 / 500;
+    private static final double BOUNDING_BOX_DIM = (double) 1 / 500;
     private static Random random = new Random();
     private static Gson jsonSerializer = new Gson();
+    private boolean mGameActive = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Emitter.Listener onPlayerInited = new Emitter.Listener() {
+            @Override
+            public void call(final Object... args) {
+                if (mMap == null) {
+                    return;
+                }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        JSONObject data = (JSONObject) args[0];
+                        String str = data.toString();
+                        PlayerInitedEvent event = jsonSerializer.fromJson(str, PlayerInitedEvent.class);
+
+                        Toast.makeText(getApplicationContext(), "You joined the game as" + event.player.name , Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+        };
 
         Emitter.Listener onUpdateGameState = new Emitter.Listener() {
             @Override
@@ -63,15 +87,17 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                         JSONObject data = (JSONObject) args[0];
                         String str = data.toString();
                         UpdateGameStateEvent event = jsonSerializer.fromJson(str, UpdateGameStateEvent.class);
+
                         mMap.clear();
                         // place markers for sprites
-                        if(event.state == 2) {
-                            Toast.makeText(getApplicationContext(), "Game over, ghosts win!", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        else if(event.state == 1) {
-                            Toast.makeText(getApplicationContext(), "Game over, pacman wins!", Toast.LENGTH_SHORT).show();
-                            return;
+                        if(mGameActive) {
+                            if (event.state == 2) {
+                                mGameActive = false;
+                                Toast.makeText(getApplicationContext(), "Game over, ghosts win!", Toast.LENGTH_SHORT).show();
+                            } else if (event.state == 1) {
+                                mGameActive = false;
+                               Toast.makeText(getApplicationContext(), "Game over, pacman wins!", Toast.LENGTH_SHORT).show();
+                            }
                         }
 
                         String scoreString = "";
@@ -89,11 +115,11 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                                 event.ghosts) {
                             LatLng pos = new LatLng(ghost.location.y, ghost.location.x);
                             mMap.addMarker(new MarkerOptions()
-                                    .title("Ghost")
+                                    .title(ghost.name)
                                     .position(pos)
                                     .icon(BitmapDescriptorFactory.fromResource(R.drawable.ghost_icon))
                             );
-                            scoreString += "Ghost" + ghost.id + ":" + ghost.score;
+                            scoreString += ghost.name + ":" + ghost.score;
                         }
 
                         for (Fruit fruit :
@@ -106,11 +132,11 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                             );
                         }
 
-                        TextView scoreText = (TextView)findViewById(R.id.scores);
+                        TextView scoreText = (TextView) findViewById(R.id.scores);
                         scoreText.setText(scoreString);
 
-                        for (String change:
-                             event.changes) {
+                        for (String change :
+                                event.changes) {
                             Toast.makeText(getApplicationContext(), change, Toast.LENGTH_SHORT).show();
                         }
                     }
@@ -120,7 +146,7 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
         };
 
         GameApplication app = (GameApplication) this.getApplication();
-        app.setEventHandlers(onUpdateGameState);
+        app.setEventHandlers(onUpdateGameState, onPlayerInited);
         mSocket = app.getSocket();
         if (mSocket == null) {
             throw new NullPointerException("Could not init socket");
@@ -164,7 +190,17 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
         if (!mInitialized) {
             if (mMap != null) {
                 LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 10);
+
+                CameraPosition pos = new CameraPosition.Builder()
+                        .target(latLng)
+                        .zoom(18)
+                        .bearing(90)
+                        .tilt(90)
+                        .build();
+
+                CameraUpdate cameraUpdate = CameraUpdateFactory.newCameraPosition(pos);
+                mMap.setBuildingsEnabled(true);
+                mMap.setIndoorEnabled(true);
                 mMap.animateCamera(cameraUpdate);
 
                 InitPlayerEvent event = createInitPlayerEvent(location);

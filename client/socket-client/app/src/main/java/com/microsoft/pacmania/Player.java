@@ -1,8 +1,9 @@
 package com.microsoft.pacmania;
 
 public class Player {
-        public String id;
-        public float score;
-        public PlayerType type;
-        public LocationData location;
-    }
+    public String id;
+    public String name;
+    public float score;
+    public PlayerType type;
+    public LocationData location;
+}
