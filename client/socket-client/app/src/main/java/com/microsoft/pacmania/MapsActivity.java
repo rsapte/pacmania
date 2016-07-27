@@ -33,13 +33,11 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
     private GoogleMap mMap;
     private LocationManager mLocationManager;
     private Socket mSocket;
-
     private boolean mInitialized = false;
-    private Emitter.Listener onUpdateGameState;
 
-    private static final long MIN_TIME = 400;
-    private static final float MIN_DISTANCE = 1000;
-    private static final double BOUNDING_BOX_DIM = 1/68;
+    private static final long MIN_TIME = 0;
+    private static final float MIN_DISTANCE = 0;
+    private static final double BOUNDING_BOX_DIM = 1 / 68;
     private static Random random = new Random();
     private static Gson jsonSerializer = new Gson();
 
@@ -47,23 +45,23 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        onUpdateGameState = new Emitter.Listener() {
+        Emitter.Listener onUpdateGameState = new Emitter.Listener() {
             @Override
             public void call(final Object... args) {
-                if(mMap == null) {
+                if (mMap == null) {
                     return;
                 }
 
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        JSONObject data = (JSONObject)args[0];
+                        JSONObject data = (JSONObject) args[0];
                         String str = data.toString();
                         UpdateGameStateEvent event = jsonSerializer.fromJson(str, UpdateGameStateEvent.class);
                         mMap.clear();
                         // place markers for sprites
 
-                        if(event.pacman != null) {
+                        if (event.pacman != null) {
                             LatLng pos = new LatLng(event.pacman.location.y, event.pacman.location.x);
                             mMap.addMarker(new MarkerOptions()
                                     .title("Pacman")
@@ -95,8 +93,12 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
             }
         };
 
-        initializeSocket();
-
+        GameApplication app = (GameApplication) this.getApplication();
+        app.setEventHandlers(onUpdateGameState);
+        mSocket = app.getSocket();
+        if (mSocket == null) {
+            throw new NullPointerException("Could not init socket");
+        }
 
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -106,7 +108,7 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
         int accessFineLocationPermission = -1, accessCoarseLocationPermission = -1;
 
         // ask for location updates
-        if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             int permissionCheck = ContextCompat.checkSelfPermission(this,
                     android.Manifest.permission.ACCESS_FINE_LOCATION);
             if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
@@ -116,10 +118,10 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
             }
         }
 
-        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             int permissionCheck = ContextCompat.checkSelfPermission(this,
                     Manifest.permission.ACCESS_COARSE_LOCATION);
-            if(permissionCheck != PackageManager.PERMISSION_GRANTED) {
+            if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
                         accessCoarseLocationPermission);
                 //return;
@@ -127,41 +129,19 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
         }
 
         mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        /*if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }*/
         mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME, MIN_DISTANCE, this);
     }
 
-
-    private void initializeSocket() {
-        try {
-            mSocket = IO.socket(getString(R.string.socket_server));
-            // setup socket
-            mSocket.on(Events.UPDATE_GAME_STATE, onUpdateGameState);
-            mSocket.connect();
-        } catch (URISyntaxException e) {
-        }
-    }
     @Override
     public void onLocationChanged(Location location) {
-        if(!mInitialized) {
-            if(mMap != null) {
+        if (!mInitialized) {
+            if (mMap != null) {
                 InitPlayerEvent event = createInitPlayerEvent(location);
                 String e = toJson(event);
                 mSocket.emit(Events.INIT_PLAYER, e);
                 mInitialized = true;
             }
-        }
-        else {
+        } else {
             UpdateLocationEvent event = createUpdateLocationEvent(location);
             mSocket.emit(Events.UPDATE_LOCATION, toJson(event));
         }
@@ -188,7 +168,7 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
         double east = Math.min(180, location.getLongitude() + boxWidth);
         double west = Math.max(-180, location.getLongitude() - boxWidth);
 
-        event.fruits = new Fruit[] {
+        event.fruits = new Fruit[]{
                 new Fruit(random.nextInt(100), "Apple", generateLocation(north, south, east, west)),
                 new Fruit(random.nextInt(100), "Banana", generateLocation(north, south, east, west)),
                 new Fruit(random.nextInt(100), "Orange", generateLocation(north, south, east, west)),
@@ -206,23 +186,17 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
     }
 
     @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) { }
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+    }
 
     @Override
-    public void onProviderEnabled(String provider) { }
+    public void onProviderEnabled(String provider) {
+    }
 
     @Override
-    public void onProviderDisabled(String provider) { }
+    public void onProviderDisabled(String provider) {
+    }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -231,7 +205,5 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mSocket.disconnect();
-        mSocket.off(Events.UPDATE_GAME_STATE, onUpdateGameState);
     }
 }

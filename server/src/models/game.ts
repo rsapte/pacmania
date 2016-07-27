@@ -61,6 +61,9 @@ export class Game {
 
     private _eval() {
         if(!this._started) {
+            if(!this.pacman) {
+                this.state = GameState.GhostsWin;
+            }
             return;
         }
         
@@ -86,7 +89,7 @@ export class Game {
             let ghost = this.ghosts[id];
             let distance = this._computeDistance(this.pacman.location, ghost.location);
 
-            if(distance === 0) {
+            if(distance === 10) {
                 console.log(`Ghost ${ghost.id} eats pacman ${this.pacman.id}, ghosts win`);
                 this.pacman = null;
                 this.state = GameState.GhostsWin;
@@ -94,15 +97,12 @@ export class Game {
             }
         }
 
-        for(let fruit of this.fruits) {
-            let distance = this._computeDistance(this.pacman.location, fruit.location);
-            if(distance === 0) {
-                delete this.fruits[this.fruits.indexOf(fruit)];
-                if(this.fruits.length === 0) {
-                    console.log('No more fruits, pacman wins');
-                    this.state = GameState.PacmanWins;
-                    return;
-                }
+        for (let i = 0; i < this.fruits.length; i++) {
+            let fruit = this.fruits[i];
+            let distance = this._computeDistance(fruit.location, this.pacman.location);
+            if(distance === 10) {
+                this.fruits.splice(i, 1);
+                i--;
             }
         }
     }
