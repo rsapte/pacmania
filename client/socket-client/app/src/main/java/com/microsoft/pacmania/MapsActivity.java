@@ -65,7 +65,9 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                             LatLng pos = new LatLng(event.pacman.location.y, event.pacman.location.x);
                             mMap.addMarker(new MarkerOptions()
                                     .title("Pacman")
-                                    .position(pos));
+                                    .position(pos)
+                                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.pacman_icon))
+                            );
                         }
 
                         for (Player ghost :
@@ -84,7 +86,7 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                             mMap.addMarker(new MarkerOptions()
                                     .title("Fruit")
                                     .position(pos)
-                                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.onion_icon))
+                                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.apple_icon))
                             );
                         }
                     }
