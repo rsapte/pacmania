@@ -7,6 +7,6 @@ public class UpdateGameStateEvent {
     public Player pacman;
     public Player[] ghosts;
     public Fruit[] fruits;
-    public GameState state;
-    public String change;
+    public int state;
+    public String[] changes;
 }

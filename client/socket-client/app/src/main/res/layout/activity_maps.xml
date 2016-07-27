@@ -10,7 +10,7 @@
     android:layout_height="match_parent"
     tools:context="com.microsoft.pacmania.MapsActivity" />
     <TextView android:layout_width="match_parent"
-        android:layout_height="20dp"
+        android:layout_height="0dp"
         android:singleLine="true"
         android:id="@+id/scores"></TextView>
     </RelativeLayout>

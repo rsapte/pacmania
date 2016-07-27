@@ -6,5 +6,5 @@ package com.microsoft.pacmania;
 public enum GameState {
     Active,
     PacmanWins,
-    GhostsWin
+    GhostsWin;
 }

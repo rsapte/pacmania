@@ -3,6 +3,7 @@ package com.microsoft.pacmania;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -16,6 +17,8 @@ import android.widget.Toast;
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -62,11 +65,11 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                         UpdateGameStateEvent event = jsonSerializer.fromJson(str, UpdateGameStateEvent.class);
                         mMap.clear();
                         // place markers for sprites
-                        if(event.state == GameState.GhostsWin) {
+                        if(event.state == 2) {
                             Toast.makeText(getApplicationContext(), "Game over, ghosts win!", Toast.LENGTH_SHORT).show();
                             return;
                         }
-                        else if(event.state == GameState.PacmanWins) {
+                        else if(event.state == 1) {
                             Toast.makeText(getApplicationContext(), "Game over, pacman wins!", Toast.LENGTH_SHORT).show();
                             return;
                         }
@@ -97,7 +100,7 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                                 event.fruits) {
                             LatLng pos = new LatLng(fruit.location.y, fruit.location.x);
                             mMap.addMarker(new MarkerOptions()
-                                    .title("Fruit")
+                                    .title("Fruit (" + fruit.value + ")")
                                     .position(pos)
                                     .icon(BitmapDescriptorFactory.fromResource(R.mipmap.apple_icon))
                             );
@@ -106,8 +109,9 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                         TextView scoreText = (TextView)findViewById(R.id.scores);
                         scoreText.setText(scoreString);
 
-                        if(!event.change.isEmpty()){
-                            Toast.makeText(getApplicationContext(), event.change, Toast.LENGTH_SHORT).show();
+                        for (String change:
+                             event.changes) {
+                            Toast.makeText(getApplicationContext(), change, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -151,13 +155,18 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
         }
 
         mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME, MIN_DISTANCE, this);
+        mLocationManager.requestLocationUpdates(mLocationManager.NETWORK_PROVIDER, MIN_TIME, MIN_DISTANCE, this);
+        mLocationManager.requestLocationUpdates(mLocationManager.GPS_PROVIDER, MIN_TIME, MIN_DISTANCE, this);
     }
 
     @Override
     public void onLocationChanged(Location location) {
         if (!mInitialized) {
             if (mMap != null) {
+                LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 10);
+                mMap.animateCamera(cameraUpdate);
+
                 InitPlayerEvent event = createInitPlayerEvent(location);
                 String e = toJson(event);
                 mSocket.emit(Events.INIT_PLAYER, e);
