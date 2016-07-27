@@ -17,6 +17,7 @@ import com.github.nkzawa.socketio.client.Socket;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
@@ -64,7 +65,9 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                             LatLng pos = new LatLng(event.pacman.location.y, event.pacman.location.x);
                             mMap.addMarker(new MarkerOptions()
                                     .title("Pacman")
-                                    .position(pos));
+                                    .position(pos)
+                                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.pacman_icon))
+                            );
                         }
 
                         for (Player ghost :
@@ -72,7 +75,9 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                             LatLng pos = new LatLng(ghost.location.y, ghost.location.x);
                             mMap.addMarker(new MarkerOptions()
                                     .title("Ghost")
-                                    .position(pos));
+                                    .position(pos)
+                                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.ghost_icon))
+                            );
                         }
 
                         for (Fruit fruit :
@@ -80,7 +85,9 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                             LatLng pos = new LatLng(fruit.location.y, fruit.location.x);
                             mMap.addMarker(new MarkerOptions()
                                     .title("Fruit")
-                                    .position(pos));
+                                    .position(pos)
+                                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.apple_icon))
+                            );
                         }
                     }
                 });
