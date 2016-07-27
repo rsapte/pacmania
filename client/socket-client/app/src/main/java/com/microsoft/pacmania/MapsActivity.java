@@ -50,6 +50,18 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        final int[] ghostIcons = new int[]{
+                R.mipmap.devil_ghost_icon,
+                R.mipmap.bandit_ghost_icon,
+                R.mipmap.ninja_ghost_icon,
+                R.mipmap.pirate_ghost_icon};
+
+        final int[] fruitIcons = new int[]{
+                R.mipmap.apple_icon,
+                R.mipmap.bananas_icon,
+                R.mipmap.grapes_icon,
+                R.mipmap.cherry_icon};
+
         Emitter.Listener onUpdateGameState = new Emitter.Listener() {
             @Override
             public void call(final Object... args) {
@@ -85,23 +97,25 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                             scoreString = String.format("Score: PacMan - %d", (int) event.pacman.score);
                         }
 
+                        int ghostIndex = 0;
                         for (Player ghost :
                                 event.ghosts) {
                             LatLng pos = new LatLng(ghost.location.y, ghost.location.x);
                             mMap.addMarker(new MarkerOptions()
                                     .title("Ghost")
                                     .position(pos)
-                                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.ghost_icon))
+                                    .icon(BitmapDescriptorFactory.fromResource(ghostIcons[(ghostIndex++) % ghostIcons.length]))
                             );
                         }
 
+                        int fruitIndex = 0;
                         for (Fruit fruit :
                                 event.fruits) {
                             LatLng pos = new LatLng(fruit.location.y, fruit.location.x);
                             mMap.addMarker(new MarkerOptions()
                                     .title("Fruit (" + fruit.value + ")")
                                     .position(pos)
-                                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.apple_icon))
+                                    .icon(BitmapDescriptorFactory.fromResource(fruitIcons[(fruitIndex++) % fruitIcons.length]))
                             );
                         }
 
