@@ -75,7 +75,8 @@ class GameServer {
             pacman: this._game.pacman,
             ghosts: players,
             fruits: this._game.fruits,
-            state: this._game.state
+            state: this._game.state,
+            change: this._game.changes.length > 0 ? this._game.changes[0] : ''
         };
         console.log(`Pushing state update to sockets ${JSON.stringify(updateEvent)}`);
         this._io.sockets.emit(interfaces_1.Events.UPDATE_GAME_STATE, updateEvent);
