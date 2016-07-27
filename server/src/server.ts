@@ -81,6 +81,12 @@ class GameServer {
     private _onUpdateLocation(socket: SocketIO.Socket, event: string) {
         console.log(`Received location update event ${event}`);
         let payload: ILocationUpdatedEvent = JSON.parse(event);
+
+        if(!this._game) {
+            console.log(`No game exists, ignoring event.`);
+            return;
+        }
+
         this._game.updateLocation(socket.id, payload.location);
         this._broadcastGameState();
     }

@@ -36,7 +36,7 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
 
     private static final long MIN_TIME = 0;
     private static final float MIN_DISTANCE = 0;
-    private static final double BOUNDING_BOX_DIM = 1 / 68;
+    private static final double BOUNDING_BOX_DIM = 1 / 6;
     private static Random random = new Random();
     private static Gson jsonSerializer = new Gson();
 
