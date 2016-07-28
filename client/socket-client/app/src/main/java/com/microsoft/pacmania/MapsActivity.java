@@ -99,21 +99,21 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                         String str = data.toString();
                         UpdateGameStateEvent event = jsonSerializer.fromJson(str, UpdateGameStateEvent.class);
 
-                        // place markers for sprites
                         if(mGameActive) {
+                            for (String change :
+                                    event.changes) {
+                                Toast.makeText(getApplicationContext(), change, Toast.LENGTH_SHORT).show();
+                            }
+
                             if (event.state == 2) {
                                 mGameActive = false;
                                 Toast.makeText(getApplicationContext(), "Game over, ghosts win!", Toast.LENGTH_SHORT).show();
                             } else if (event.state == 1) {
                                 mGameActive = false;
-                               Toast.makeText(getApplicationContext(), "Game over, pacman wins!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), "Game over, pacman wins!", Toast.LENGTH_SHORT).show();
                             }
                         }
 
-                        if(event.state == 2 || event.state == 1) {
-                            return;
-                        }
-                        
                         mMap.clear();
 
                         String scoreString = "";
@@ -152,10 +152,7 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                         TextView scoreText = (TextView) findViewById(R.id.scores);
                         scoreText.setText(scoreString);
 
-                        for (String change :
-                                event.changes) {
-                            Toast.makeText(getApplicationContext(), change, Toast.LENGTH_SHORT).show();
-                        }
+
                     }
                 });
 
