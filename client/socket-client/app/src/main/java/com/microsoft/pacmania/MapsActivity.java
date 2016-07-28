@@ -99,7 +99,6 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                         String str = data.toString();
                         UpdateGameStateEvent event = jsonSerializer.fromJson(str, UpdateGameStateEvent.class);
 
-                        mMap.clear();
                         // place markers for sprites
                         if(mGameActive) {
                             if (event.state == 2) {
@@ -110,6 +109,12 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
                                Toast.makeText(getApplicationContext(), "Game over, pacman wins!", Toast.LENGTH_SHORT).show();
                             }
                         }
+
+                        if(event.state == 2 || event.state == 1) {
+                            return;
+                        }
+                        
+                        mMap.clear();
 
                         String scoreString = "";
                         if (event.pacman != null) {
